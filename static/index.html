@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Local Context-Aware Home</title>
+    <link rel="stylesheet" href="/static/styles.css?v=2" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Local AI · Home Assistant · Matter</p>
+        <h1>Context-aware home control</h1>
+      </div>
+      <div class="system-status" aria-label="System status">
+        <span id="backend-status" class="status-chip">Backend</span>
+        <span id="llm-status" class="status-chip">LLM</span>
+        <span id="stt-status" class="status-chip">STT</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="command-section" aria-labelledby="command-heading">
+        <div class="section-heading">
+          <div><p class="step-label">01 · User request</p><h2 id="command-heading">Speak or type a command</h2></div>
+          <span id="request-status" class="request-status">Ready</span>
+        </div>
+        <form id="text-form" class="command-row">
+          <input id="command-input" type="text" autocomplete="off" value="Open the living room curtain." aria-label="Smart home command" />
+          <button id="run-button" type="submit">Run command</button>
+          <button id="record-button" class="secondary" type="button">Record voice</button>
+        </form>
+      </section>
+
+      <section class="context-section" aria-labelledby="context-heading">
+        <div class="section-heading">
+          <div><p class="step-label">02 · Live context</p><h2 id="context-heading">Current environment</h2></div>
+          <span id="context-time" class="muted">Waiting for data</span>
+        </div>
+        <div class="metric-grid">
+          <article class="metric"><span class="metric-label">Temperature</span><strong id="temperature-value">--</strong><span class="metric-unit">°C · Aqara</span></article>
+          <article class="metric"><span class="metric-label">Humidity</span><strong id="humidity-value">--</strong><span class="metric-unit">% · Aqara</span></article>
+          <article class="metric"><span class="metric-label">Illuminance</span><strong id="illuminance-value">--</strong><span class="metric-unit">lux · Aqara</span></article>
+          <article class="metric accent"><span class="metric-label">Living room curtain</span><strong id="curtain-value">--</strong><span id="curtain-position" class="metric-unit">Matter · Home Assistant</span></article>
+        </div>
+        <div class="environment-row">
+          <div class="environment-group">
+            <h3>Sun</h3>
+            <dl>
+              <div><dt>Sunrise</dt><dd id="sunrise-value">--</dd></div>
+              <div><dt>Sunset</dt><dd id="sunset-value">--</dd></div>
+              <div><dt>Sun position</dt><dd id="sun-position-value">--</dd></div>
+              <div><dt>Window alignment</dt><dd id="window-value">--</dd></div>
+            </dl>
+          </div>
+          <div class="environment-group">
+            <h3>Outdoor · Open-Meteo</h3>
+            <dl>
+              <div><dt>Temperature</dt><dd id="outdoor-temperature">--</dd></div>
+              <div><dt>Cloud cover</dt><dd id="cloud-value">--</dd></div>
+              <div><dt>Direct radiation</dt><dd id="radiation-value">--</dd></div>
+              <div><dt>Rain probability</dt><dd id="rain-value">--</dd></div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section class="decision-section" aria-labelledby="decision-heading">
+        <div class="section-heading">
+          <div><p class="step-label">03 · Local LLM decision</p><h2 id="decision-heading">Decision and execution</h2></div>
+          <span id="execution-state" class="execution-state neutral">No command yet</span>
+        </div>
+        <div class="decision-grid">
+          <div class="decision-field"><span>Transcript / input</span><strong id="transcript-output">No request yet.</strong></div>
+          <div class="decision-field response-field"><span>System response</span><strong id="response-output">Waiting for a command.</strong></div>
+          <div class="decision-field"><span>Intent</span><strong id="intent-output">--</strong></div>
+          <div class="decision-field"><span>Validated action</span><strong id="action-output">--</strong></div>
+        </div>
+        <details class="debug-panel">
+          <summary>Technical details</summary>
+          <div class="debug-grid">
+            <div><h3>Generated JSON</h3><pre id="json-output">{}</pre></div>
+            <div><h3>Execution</h3><pre id="result-output">No command yet.</pre></div>
+            <div class="trace"><h3>LLM trace</h3><pre id="trace-output">No LLM request yet.</pre></div>
+          </div>
+        </details>
+      </section>
+    </main>
+    <script src="/static/app.js?v=4"></script>
+  </body>
+</html>
