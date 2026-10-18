@@ -65,3 +65,17 @@ Private raw voice and candidate files remain unavailable for public replay.
 Publish this reviewed tree as an ordinary commit with tag `kics-2026-artifact-v1`,
 preserving `4e16ebc` and keeping development private. Future changes must retain
 the distinction between historical KICS evidence and newer experimental revisions.
+
+## README Motivation Clarification
+
+After the author's README edit at `83f283f`, revised both three-line summaries to
+state the local-processing motivation: reduce exposure of voice and command data
+to external AI services while evaluating command correctness after post-processing.
+This is a design objective, not evidence of a security audit, a guarantee of
+security, or a claim that optional weather retrieval is offline. The general IoT
+description does not expand the documented physical evaluation beyond the curtain
+and IR AC. The existing scope and optional-external-service caveats remain intact.
+
+Changes are documentation-only. Verification checks preserve the three-line format
+in both languages, local links, and the unchanged paper/runtime. No empirical
+experiment is rerun or new performance/security result asserted.

@@ -2,15 +2,15 @@
 
 **English**
 
-- **What:** An English voice/text smart-home controller for variety of IoT devices.
-- **How:** Local speech recognition and LLM inference combine with sensor context, deterministic policies, and command validation before Home Assistant execution.
-- **Why:** To examine how post-processing changes command correctness when a small local LLM connects natural-language requests to deployed devices.
+- **What:** A smart-home system that controls IoT devices through English voice and text commands.
+- **How:** Speech is transcribed locally, an on-device LLM interprets the request with sensor context, and policy checks and command validation run before Home Assistant executes device commands.
+- **Why:** To reduce exposure of voice and command data to external AI services through local processing, and to evaluate whether post-processing improves the correctness of device-control commands.
 
 **한국어**
 
-- **무엇을:** 영어 음성 또는 텍스트로 IoT기기들을 제어하는 스마트홈 시스템을 만들었다.
-- **어떻게:** 로컬에서 음성을 텍스트로 변환하고, 센서 맥락을 받은 LLM의 출력을 결정론적 정책과 명령 검증을 거쳐 Home Assistant로 실행한다.
-- **왜:** 소형 로컬 LLM의 자연어 해석을 실제 장치 제어에 연결할 때 후처리가 명령 정확성에 어떤 영향을 주는지 확인하기 위해 만들었다.
+- **무엇을:** 영어 음성과 텍스트 명령으로 IoT 기기를 제어하는 스마트홈 시스템을 만들었다.
+- **어떻게:** 로컬에서 음성을 텍스트로 변환하고, 센서 맥락을 활용해 LLM이 만든 제어 명령을 정책과 검증 절차로 확인한 뒤 Home Assistant로 실행한다.
+- **왜:** 음성과 명령을 외부 AI 서비스로 보내지 않는 로컬 처리로 데이터 노출을 줄이고, 후처리가 기기 제어 명령의 정확성을 높이는지 확인하기 위해 만들었다.
 
 ## KICS 2026 Paper
 
