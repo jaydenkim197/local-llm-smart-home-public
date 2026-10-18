@@ -2,13 +2,13 @@
 
 **English**
 
-- **What:** An English voice/text smart-home controller for a curtain and an IR air conditioner.
+- **What:** An English voice/text smart-home controller for variety of IoT devices.
 - **How:** Local speech recognition and LLM inference combine with sensor context, deterministic policies, and command validation before Home Assistant execution.
 - **Why:** To examine how post-processing changes command correctness when a small local LLM connects natural-language requests to deployed devices.
 
 **한국어**
 
-- **무엇을:** 영어 음성 또는 텍스트로 커튼과 IR 에어컨을 제어하는 스마트홈 시스템을 만들었다.
+- **무엇을:** 영어 음성 또는 텍스트로 IoT기기들을 제어하는 스마트홈 시스템을 만들었다.
 - **어떻게:** 로컬에서 음성을 텍스트로 변환하고, 센서 맥락을 받은 LLM의 출력을 결정론적 정책과 명령 검증을 거쳐 Home Assistant로 실행한다.
 - **왜:** 소형 로컬 LLM의 자연어 해석을 실제 장치 제어에 연결할 때 후처리가 명령 정확성에 어떤 영향을 주는지 확인하기 위해 만들었다.
 
