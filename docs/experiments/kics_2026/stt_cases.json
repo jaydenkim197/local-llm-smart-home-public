@@ -1,0 +1,31 @@
+{
+  "dataset_id": "kics_2026_stt_eval_v1",
+  "status": "frozen_before_recording",
+  "frozen": true,
+  "frozen_on": "2026-09-20",
+  "language": "en",
+  "source_dataset": "kics_2026_command_eval_v1",
+  "source_dataset_sha256": "80bc08ce34a6e280eecd60ecca0c2da354793013f8f53bca27f29f49e3dd6f86",
+  "takes_per_case": 3,
+  "recording_protocol": {
+    "speaker_count": 1,
+    "environment": "quiet indoor room",
+    "microphone": "MacBook built-in microphone",
+    "delivery": "natural pace and volume; do not dictate punctuation",
+    "silence": "approximately 0.5 seconds before and after each utterance"
+  },
+  "cases": [
+    {"id": "S01", "source_case_id": "C02"},
+    {"id": "S02", "source_case_id": "C03"},
+    {"id": "S03", "source_case_id": "C05"},
+    {"id": "S04", "source_case_id": "C07"},
+    {"id": "S05", "source_case_id": "C08"},
+    {"id": "S06", "source_case_id": "C11"},
+    {"id": "S07", "source_case_id": "C13"},
+    {"id": "S08", "source_case_id": "C19"},
+    {"id": "S09", "source_case_id": "C22"},
+    {"id": "S10", "source_case_id": "C29"},
+    {"id": "S11", "source_case_id": "C31"},
+    {"id": "S12", "source_case_id": "C35"}
+  ]
+}

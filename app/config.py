@@ -26,6 +26,11 @@ HOME_ASSISTANT_AC_SCENE_RESET_DELAY = float(
     os.getenv("HOME_ASSISTANT_AC_SCENE_RESET_DELAY", "2.0")
 )
 
+# Defaults preserve the frozen evaluation-policy baseline. A deployed home may
+# override these locally after a documented sensor calibration.
+HOME_DARK_LUX_THRESHOLD = float(os.getenv("HOME_DARK_LUX_THRESHOLD", "100"))
+HOME_BRIGHT_LUX_THRESHOLD = float(os.getenv("HOME_BRIGHT_LUX_THRESHOLD", "800"))
+
 HOME_LATITUDE = _optional_float("HOME_LATITUDE")
 HOME_LONGITUDE = _optional_float("HOME_LONGITUDE")
 HOME_ELEVATION_M = float(os.getenv("HOME_ELEVATION_M", "0"))

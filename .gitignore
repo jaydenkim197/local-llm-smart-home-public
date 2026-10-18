@@ -5,6 +5,7 @@ __pycache__/
 .DS_Store
 data/*.wav
 data/*.webm
+data/kics_2026_stt/
 .env
 .env.*
 !.env.example
@@ -18,3 +19,6 @@ htmlcov/
 *.log
 artifacts/demo/*.mov
 artifacts/demo/raw/
+artifacts/qa/
+docs/experiments/kics_2026/results/*
+!docs/experiments/kics_2026/results/README.md

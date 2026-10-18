@@ -1,0 +1,28 @@
+{
+  "dataset_id": "kics_2026_live_context_calibrated_v2",
+  "status": "frozen_before_execution",
+  "frozen": true,
+  "frozen_on": "2026-09-25",
+  "policy_profile": {"dark_lux_threshold": 300.0, "bright_lux_threshold": 800.0},
+  "scope_note": "This dataset evaluates only the deployed calibration profile. Historical v1 and command-evaluation datasets retain their original 100-lux dark threshold.",
+  "cases": [
+    {
+      "id": "LC01",
+      "name": "calibrated dark-room increase action",
+      "utterance": "It's dark in here.",
+      "precondition": {"illuminance_max_lux": 300, "curtain_state": "closed"},
+      "expected_intent": "increase_natural_light",
+      "expected_commands": [{"entity_id": "cover.living_room_curtain", "action": "open_cover"}],
+      "verification": {"type": "ha_cover_state", "expected_state": "open"}
+    },
+    {
+      "id": "LC02",
+      "name": "calibrated dark-room redundant command suppression",
+      "utterance": "It's dark in here.",
+      "precondition": {"illuminance_max_lux": 300, "curtain_state": "open"},
+      "expected_intent": "context_no_action",
+      "expected_commands": [],
+      "verification": {"type": "no_actuation", "expected_state": "open"}
+    }
+  ]
+}

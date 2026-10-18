@@ -1,0 +1,63 @@
+{
+  "dataset_id": "kics_2026_live_context_v1",
+  "status": "frozen_before_execution",
+  "frozen": true,
+  "frozen_on": "2026-09-25",
+  "scope_note": "Live Home Assistant context is sampled immediately before and after each request. The runner never repairs a failed precondition or infers physical device state from a command response.",
+  "cases": [
+    {
+      "id": "L01",
+      "name": "bright-room reduction action",
+      "utterance": "It's too bright in here.",
+      "precondition": {"illuminance_min_lux": 800, "curtain_state": "open"},
+      "expected_intent": "reduce_natural_light",
+      "expected_commands": [{"entity_id": "cover.living_room_curtain", "action": "close_cover"}],
+      "verification": {"type": "ha_cover_state", "expected_state": "closed"}
+    },
+    {
+      "id": "L02",
+      "name": "bright-room redundant command suppression",
+      "utterance": "It's too bright in here.",
+      "precondition": {"illuminance_min_lux": 800, "curtain_state": "closed"},
+      "expected_intent": "context_no_action",
+      "expected_commands": [],
+      "verification": {"type": "no_actuation", "expected_state": "closed"}
+    },
+    {
+      "id": "L03",
+      "name": "dark-room increase action",
+      "utterance": "It's dark in here.",
+      "precondition": {"illuminance_max_lux": 100, "curtain_state": "closed"},
+      "expected_intent": "increase_natural_light",
+      "expected_commands": [{"entity_id": "cover.living_room_curtain", "action": "open_cover"}],
+      "verification": {"type": "ha_cover_state", "expected_state": "open"}
+    },
+    {
+      "id": "L04",
+      "name": "dark-room redundant command suppression",
+      "utterance": "It's dark in here.",
+      "precondition": {"illuminance_max_lux": 100, "curtain_state": "open"},
+      "expected_intent": "context_no_action",
+      "expected_commands": [],
+      "verification": {"type": "no_actuation", "expected_state": "open"}
+    },
+    {
+      "id": "L05",
+      "name": "unsupported air-conditioner capability rejection",
+      "utterance": "Set the air conditioner fan speed to high.",
+      "precondition": {},
+      "expected_intent": "unsupported",
+      "expected_commands": [],
+      "verification": {"type": "no_actuation"}
+    },
+    {
+      "id": "L06",
+      "name": "undefined scene rejection",
+      "utterance": "Create a study mode and activate it now.",
+      "precondition": {},
+      "expected_intent": "unsupported",
+      "expected_commands": [],
+      "verification": {"type": "no_actuation"}
+    }
+  ]
+}

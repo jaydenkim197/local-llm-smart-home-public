@@ -1,0 +1,274 @@
+{
+  "dataset_id": "kics_2026_command_generalization_v1",
+  "status": "frozen_before_results",
+  "frozen": true,
+  "frozen_on": "2026-09-20",
+  "authored_after_initial_results": true,
+  "production_code_locked_at": "d281c9e95af9880474e18a15a079fdc955a920a7",
+  "language": "en",
+  "purpose": "Prospective generalization check for the unchanged deployed curtain and IR AC command planner",
+  "supported_entities": [
+    "cover.living_room_curtain",
+    "climate.air_conditioner"
+  ],
+  "contexts": {
+    "neutral_open": {
+      "source": "synthetic_evaluation",
+      "living_room": {
+        "temperature_c": 24.0,
+        "humidity_percent": 50.0,
+        "illuminance_lux": 400.0,
+        "curtain": {"state": "open", "position": 100}
+      },
+      "derived": {"is_dark": false, "is_bright": false, "is_hot": false, "is_humid": false}
+    },
+    "neutral_closed": {
+      "source": "synthetic_evaluation",
+      "living_room": {
+        "temperature_c": 24.0,
+        "humidity_percent": 50.0,
+        "illuminance_lux": 400.0,
+        "curtain": {"state": "closed", "position": 0}
+      },
+      "derived": {"is_dark": false, "is_bright": false, "is_hot": false, "is_humid": false}
+    },
+    "hot_open": {
+      "source": "synthetic_evaluation",
+      "living_room": {
+        "temperature_c": 29.5,
+        "humidity_percent": 48.0,
+        "illuminance_lux": 900.0,
+        "curtain": {"state": "open", "position": 100}
+      },
+      "derived": {"is_dark": false, "is_bright": true, "is_hot": true, "is_humid": false}
+    },
+    "hot_closed": {
+      "source": "synthetic_evaluation",
+      "living_room": {
+        "temperature_c": 29.5,
+        "humidity_percent": 48.0,
+        "illuminance_lux": 900.0,
+        "curtain": {"state": "closed", "position": 0}
+      },
+      "derived": {"is_dark": false, "is_bright": true, "is_hot": true, "is_humid": false}
+    },
+    "cool_open": {
+      "source": "synthetic_evaluation",
+      "living_room": {
+        "temperature_c": 26.0,
+        "humidity_percent": 48.0,
+        "illuminance_lux": 400.0,
+        "curtain": {"state": "open", "position": 100}
+      },
+      "derived": {"is_dark": false, "is_bright": false, "is_hot": false, "is_humid": false}
+    },
+    "dark_closed": {
+      "source": "synthetic_evaluation",
+      "living_room": {
+        "temperature_c": 22.0,
+        "humidity_percent": 50.0,
+        "illuminance_lux": 80.0,
+        "curtain": {"state": "closed", "position": 0}
+      },
+      "derived": {"is_dark": true, "is_bright": false, "is_hot": false, "is_humid": false}
+    },
+    "dark_open": {
+      "source": "synthetic_evaluation",
+      "living_room": {
+        "temperature_c": 22.0,
+        "humidity_percent": 50.0,
+        "illuminance_lux": 80.0,
+        "curtain": {"state": "open", "position": 100}
+      },
+      "derived": {"is_dark": true, "is_bright": false, "is_hot": false, "is_humid": false}
+    },
+    "bright_open": {
+      "source": "synthetic_evaluation",
+      "living_room": {
+        "temperature_c": 22.0,
+        "humidity_percent": 50.0,
+        "illuminance_lux": 950.0,
+        "curtain": {"state": "open", "position": 100}
+      },
+      "derived": {"is_dark": false, "is_bright": true, "is_hot": false, "is_humid": false}
+    },
+    "lux_800_open": {
+      "source": "synthetic_evaluation",
+      "living_room": {
+        "temperature_c": 22.0,
+        "humidity_percent": 50.0,
+        "illuminance_lux": 800.0,
+        "curtain": {"state": "open", "position": 100}
+      },
+      "derived": {"is_dark": false, "is_bright": false, "is_hot": false, "is_humid": false}
+    },
+    "unavailable": {
+      "source": "unavailable",
+      "living_room": {},
+      "derived": {},
+      "error": "synthetic evaluation context unavailable"
+    }
+  },
+  "cases": [
+    {
+      "id": "H01",
+      "category": "direct_curtain",
+      "utterance": "Part the drapes in the lounge.",
+      "context_id": "neutral_closed",
+      "expected": {"intent": "curtain_control", "commands": [{"entity_id": "cover.living_room_curtain", "action": "open_cover"}]},
+      "rationale": "Prospective opening paraphrase not present in the original set."
+    },
+    {
+      "id": "H02",
+      "category": "direct_curtain",
+      "utterance": "Bring the lounge blinds down.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "curtain_control", "commands": [{"entity_id": "cover.living_room_curtain", "action": "close_cover"}]},
+      "rationale": "Prospective closing paraphrase with room and device synonyms."
+    },
+    {
+      "id": "H03",
+      "category": "direct_curtain",
+      "utterance": "Hold the curtain right there.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "curtain_control", "commands": [{"entity_id": "cover.living_room_curtain", "action": "stop_cover"}]},
+      "rationale": "Unseen stop expression without reusing the original failure wording."
+    },
+    {
+      "id": "H04",
+      "category": "direct_ac",
+      "utterance": "Switch on cooling.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "air_conditioner_scene_control", "commands": [{"entity_id": "climate.air_conditioner", "action": "turn_on"}]},
+      "rationale": "Direct cooling selects the only deployed cooling actuator. The logical turn_on command does not define cooling as permanently fixed to 24 C; Cool 24 is the current adapter mapping."
+    },
+    {
+      "id": "H05",
+      "category": "direct_ac",
+      "utterance": "Power down the aircon.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "air_conditioner_scene_control", "commands": [{"entity_id": "climate.air_conditioner", "action": "turn_off"}]},
+      "rationale": "Direct off command using a new colloquial device name."
+    },
+    {
+      "id": "H06",
+      "category": "direct_ac",
+      "utterance": "Set the AC fan to high.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "unsupported", "commands": []},
+      "rationale": "The bounded IR scenes do not expose fan-speed control."
+    },
+    {
+      "id": "H07",
+      "category": "context_cooling",
+      "utterance": "This room is boiling. Do something about the heat.",
+      "context_id": "hot_open",
+      "expected": {"intent": "reduce_heat", "commands": [{"entity_id": "cover.living_room_curtain", "action": "close_cover"}, {"entity_id": "climate.air_conditioner", "action": "turn_on"}]},
+      "rationale": "Prospective indirect heat complaint with hot context and open curtain."
+    },
+    {
+      "id": "H08",
+      "category": "context_cooling",
+      "utterance": "The heat in here is unbearable. Please deal with it.",
+      "context_id": "hot_closed",
+      "expected": {"intent": "reduce_heat", "commands": [{"entity_id": "climate.air_conditioner", "action": "turn_on"}]},
+      "rationale": "Hot context requires cooling while redundant curtain close is omitted."
+    },
+    {
+      "id": "H09",
+      "category": "context_cooling",
+      "utterance": "I am feeling warm in here.",
+      "context_id": "cool_open",
+      "expected": {"intent": "context_no_action", "commands": []},
+      "rationale": "Subjective warmth is suppressed when temperature is below threshold."
+    },
+    {
+      "id": "H10",
+      "category": "context_cooling",
+      "utterance": "Make it pleasant in the living room.",
+      "context_id": "unavailable",
+      "expected": {"intent": "context_unavailable", "commands": []},
+      "rationale": "Ambiguous comfort request fails closed without sensor context."
+    },
+    {
+      "id": "H11",
+      "category": "context_light",
+      "utterance": "The room could use some sunlight.",
+      "context_id": "dark_closed",
+      "expected": {"intent": "increase_natural_light", "commands": [{"entity_id": "cover.living_room_curtain", "action": "open_cover"}]},
+      "rationale": "Dark context and closed curtain support increasing natural light."
+    },
+    {
+      "id": "H12",
+      "category": "context_light",
+      "utterance": "The room could use some sunlight.",
+      "context_id": "dark_open",
+      "expected": {"intent": "context_no_action", "commands": []},
+      "rationale": "The same request becomes a no-op when the curtain is already open."
+    },
+    {
+      "id": "H13",
+      "category": "context_light",
+      "utterance": "The sunlight is dazzling in here.",
+      "context_id": "bright_open",
+      "expected": {"intent": "reduce_natural_light", "commands": [{"entity_id": "cover.living_room_curtain", "action": "close_cover"}]},
+      "rationale": "Bright context and open curtain support reducing natural light."
+    },
+    {
+      "id": "H14",
+      "category": "context_light",
+      "utterance": "The sunlight is dazzling in here.",
+      "context_id": "lux_800_open",
+      "expected": {"intent": "context_no_action", "commands": []},
+      "rationale": "Exactly 800 lux does not cross the strict bright threshold."
+    },
+    {
+      "id": "H15",
+      "category": "scene_and_global",
+      "utterance": "We are about to watch a film.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "movie_mode", "commands": [{"entity_id": "cover.living_room_curtain", "action": "close_cover"}]},
+      "rationale": "Movie intent is projected onto the deployed physical actuator scope."
+    },
+    {
+      "id": "H16",
+      "category": "scene_and_global",
+      "utterance": "We are leaving the house for the night.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "away_mode", "commands": [{"entity_id": "cover.living_room_curtain", "action": "close_cover"}, {"entity_id": "climate.air_conditioner", "action": "turn_off"}]},
+      "rationale": "Prospective away expression retains only deployed physical actions."
+    },
+    {
+      "id": "H17",
+      "category": "scene_and_global",
+      "utterance": "Bring every supported device online.",
+      "context_id": "neutral_closed",
+      "expected": {"intent": "whole_home_on", "commands": [{"entity_id": "cover.living_room_curtain", "action": "open_cover"}, {"entity_id": "climate.air_conditioner", "action": "turn_on"}]},
+      "rationale": "The reviewed policy treats bringing every supported device online as explicit whole-home on within the bounded physical scope."
+    },
+    {
+      "id": "H18",
+      "category": "scene_and_global",
+      "utterance": "Turn off everything that is connected.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "whole_home_off", "commands": [{"entity_id": "cover.living_room_curtain", "action": "close_cover"}, {"entity_id": "climate.air_conditioner", "action": "turn_off"}]},
+      "rationale": "Explicit global-off request is bounded to deployed physical actions."
+    },
+    {
+      "id": "H19",
+      "category": "unsupported_and_safety",
+      "utterance": "Open the garage door.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "unsupported", "commands": []},
+      "rationale": "Unconfigured physical access device must not receive a command."
+    },
+    {
+      "id": "H20",
+      "category": "unsupported_and_safety",
+      "utterance": "Create a study mode and activate it now.",
+      "context_id": "neutral_open",
+      "expected": {"intent": "unsupported", "commands": []},
+      "rationale": "Undefined scenes must not be invented from otherwise valid actions."
+    }
+  ]
+}

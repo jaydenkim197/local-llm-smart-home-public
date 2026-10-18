@@ -1,0 +1,55 @@
+{
+  "dataset_id": "kics_2026_physical_e2e_v1",
+  "status": "frozen_before_execution",
+  "frozen": true,
+  "frozen_on": "2026-09-25",
+  "repetitions": 3,
+  "input_path": "prerecorded WebM -> FastAPI /api/command/audio",
+  "scope_note": "Browser capture and speaking time are excluded. Curtain completion is verified from Home Assistant state. IR AC state requires a separate operator observation and is never inferred from a successful HTTP response.",
+  "cases": [
+    {
+      "id": "P01",
+      "name": "audio curtain open",
+      "audio_file": "speaker01/S03_take03.webm",
+      "reference_text": "Raise the living-room curtain all the way.",
+      "precondition": {"curtain_state": "closed"},
+      "expected_commands": [
+        {"entity_id": "cover.living_room_curtain", "action": "open_cover"}
+      ],
+      "verification": {"type": "ha_cover_state", "expected_state": "open"}
+    },
+    {
+      "id": "P02",
+      "name": "audio curtain close",
+      "audio_file": "speaker01/S01_take03.webm",
+      "reference_text": "Please lower the living room shade.",
+      "precondition": {"curtain_state": "open"},
+      "expected_commands": [
+        {"entity_id": "cover.living_room_curtain", "action": "close_cover"}
+      ],
+      "verification": {"type": "ha_cover_state", "expected_state": "closed"}
+    },
+    {
+      "id": "P03",
+      "name": "audio AC Cool 24 preset",
+      "audio_file": "speaker01/S04_take03.webm",
+      "reference_text": "Start the air conditioning.",
+      "precondition": {},
+      "expected_commands": [
+        {"entity_id": "climate.air_conditioner", "action": "turn_on"}
+      ],
+      "verification": {"type": "operator_ir_observation", "expected_result": "ac_cooling_response"}
+    },
+    {
+      "id": "P04",
+      "name": "audio AC Off preset",
+      "audio_file": "speaker01/S05_take03.webm",
+      "reference_text": "Kill the AC for now.",
+      "precondition": {},
+      "expected_commands": [
+        {"entity_id": "climate.air_conditioner", "action": "turn_off"}
+      ],
+      "verification": {"type": "operator_ir_observation", "expected_result": "ac_off_response"}
+    }
+  ]
+}

@@ -1,6 +1,18 @@
 # Project Documentation
 
-This directory preserves the development history and current technical state of the Local LLM Smart Home project.
+This directory contains the public implementation record and the KICS reference
+artifact for the Context-Aware Local LLM-Based IoT Control System. Historical MVP
+documents below describe their dated milestones, not every later experiment.
+
+## Paper and Research Artifact
+
+- [KICS 2026 paper](papers/README.md): author's unchanged Korean submission PDF.
+- [Evaluation artifact](experiments/kics_2026/README.md): frozen command sets, voice
+  prompt manifest, evaluation tools, result summaries, and reproduction boundaries.
+- [Public release scope](public-release.md): source snapshot, excluded private
+  material, and the private-development/public-distribution workflow.
+- [Release decision](decisions/ADR-019-public-kics-artifact.md).
+- [Release verification record](development/2026-10-19-public-kics-artifact.md).
 
 ## Documentation Map
 

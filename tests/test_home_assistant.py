@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 import httpx
 
@@ -100,6 +101,13 @@ class HomeAssistantAdapterTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(context["derived"]["is_dark"])
         self.assertNotIn("motion", context["living_room"])
 
+    def test_deployed_dark_threshold_can_be_calibrated_without_changing_default(self):
+        with patch("services.home_context.DARK_LUX_THRESHOLD", 300.0):
+            calibrated = build_home_context(sample_states(illuminance="235"))
+        baseline = build_home_context(sample_states(illuminance="235"))
+        self.assertTrue(calibrated["derived"]["is_dark"])
+        self.assertFalse(baseline["derived"]["is_dark"])
+
     async def test_ac_scene_turn_on_uses_cool_preset_without_claiming_ac_state(self):
         requests = []
 
@@ -125,16 +133,12 @@ class HomeAssistantAdapterTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(result["success"])
         self.assertIn("climate.air_conditioner", adapter.supported_entities)
-        self.assertEqual(requests[0].url.path, "/api/states/switch.ac_cool_24")
-        self.assertEqual(requests[1].url.path, "/api/states/switch.ac_off")
-        self.assertEqual(requests[2].url.path, "/api/services/switch/turn_off")
-        self.assertEqual(requests[2].content, b'{"entity_id":"switch.ac_off"}')
+        self.assertEqual(requests[0].url.path, "/api/states/switch.ac_off")
+        self.assertEqual(requests[1].url.path, "/api/services/switch/turn_on")
+        self.assertEqual(requests[1].content, b'{"entity_id":"switch.ac_off"}')
+        self.assertEqual(requests[2].url.path, "/api/states/switch.ac_cool_24")
         self.assertEqual(requests[3].url.path, "/api/services/switch/turn_on")
-        self.assertEqual(requests[3].content, b'{"entity_id":"switch.ac_off"}')
-        self.assertEqual(requests[4].url.path, "/api/services/switch/turn_off")
-        self.assertEqual(requests[4].content, b'{"entity_id":"switch.ac_cool_24"}')
-        self.assertEqual(requests[5].url.path, "/api/services/switch/turn_on")
-        self.assertEqual(requests[5].content, b'{"entity_id":"switch.ac_cool_24"}')
+        self.assertEqual(requests[3].content, b'{"entity_id":"switch.ac_cool_24"}')
         self.assertEqual(
             result["applied"][0]["service"],
             "AC Off scene -> AC Cool 24 scene",
@@ -171,11 +175,17 @@ class HomeAssistantAdapterTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result["success"])
         self.assertEqual(requests[0].url.path, "/api/states/switch.ac_off")
         self.assertEqual(requests[1].content, b'{"entity_id":"switch.ac_off"}')
-        self.assertEqual(requests[2].content, b'{"entity_id":"switch.ac_off"}')
+        self.assertEqual(requests[1].url.path, "/api/services/switch/turn_on")
+        self.assertEqual(len(requests), 2)
+        self.assertEqual(result["applied"][0]["service"], "AC Off scene")
         self.assertEqual(result["applied"][0]["preset"], "Off")
 
 
 class HardwareCommandRestrictionTests(unittest.TestCase):
+    @staticmethod
+    def physical_entities():
+        return {"cover.living_room_curtain", "climate.air_conditioner"}
+
     def test_explicit_close_curtain_overrides_incorrect_model_action(self):
         incorrect_model_output = {
             "intent": None,
@@ -257,6 +267,118 @@ class HardwareCommandRestrictionTests(unittest.TestCase):
 
         self.assertEqual(result["commands"], [])
         self.assertIn("does not indicate", result["response"])
+
+    def test_arbitrary_ac_temperature_is_blocked_before_model_action(self):
+        model_output = {
+            "intent": "set_temperature",
+            "commands": [
+                {
+                    "entity_id": "climate.air_conditioner",
+                    "action": "set_temperature",
+                    "value": 19,
+                }
+            ],
+            "response": "Setting the temperature.",
+        }
+
+        result = _normalize_parsed_command(
+            "Set the air conditioner to nineteen degrees.",
+            model_output,
+            build_home_context(sample_states()),
+            self.physical_entities(),
+        )
+
+        self.assertEqual(result["intent"], "unsupported")
+        self.assertEqual(result["commands"], [])
+        self.assertIn("Cool 24 C", result["response"])
+
+    def test_physical_action_allowlist_drops_schema_valid_but_unsupported_ac_action(self):
+        parsed = {
+            "intent": "set_temperature",
+            "commands": [
+                {
+                    "entity_id": "climate.air_conditioner",
+                    "action": "set_temperature",
+                    "value": 20,
+                }
+            ],
+            "response": "Setting the temperature.",
+        }
+
+        result = _restrict_to_supported_entities(parsed, self.physical_entities())
+
+        self.assertEqual(result["intent"], "unsupported")
+        self.assertEqual(result["commands"], [])
+
+    def test_contextual_cooling_fails_closed_when_context_is_unavailable(self):
+        model_output = {
+            "intent": "reduce_heat",
+            "commands": [
+                {"entity_id": "climate.air_conditioner", "action": "turn_on"}
+            ],
+            "response": "Cooling.",
+        }
+
+        result = _normalize_parsed_command(
+            "It is blazing hot in here. Fix it.",
+            model_output,
+            {"source": "unavailable", "living_room": {}, "derived": {}},
+            self.physical_entities(),
+        )
+
+        self.assertEqual(result["intent"], "context_unavailable")
+        self.assertEqual(result["commands"], [])
+
+    def test_heating_request_never_triggers_cool_preset(self):
+        model_output = {
+            "intent": "heating",
+            "commands": [
+                {"entity_id": "climate.air_conditioner", "action": "turn_on"}
+            ],
+            "response": "Heating.",
+        }
+
+        result = _normalize_parsed_command(
+            "Warm up the living room.",
+            model_output,
+            build_home_context(sample_states()),
+            self.physical_entities(),
+        )
+
+        self.assertEqual(result["intent"], "unsupported")
+        self.assertEqual(result["commands"], [])
+
+    def test_dim_paraphrase_still_requires_dark_sensor_context(self):
+        states = sample_states(curtain_state="closed", position=0, illuminance="400")
+        result = _normalize_parsed_command(
+            "It feels dim in here.",
+            {
+                "intent": "increase_natural_light",
+                "commands": [
+                    {"entity_id": "cover.living_room_curtain", "action": "open_cover"}
+                ],
+                "response": "Opening.",
+            },
+            build_home_context(states),
+            self.physical_entities(),
+        )
+
+        self.assertEqual(result["intent"], "context_no_action")
+        self.assertEqual(result["commands"], [])
+
+    def test_stifling_paraphrase_uses_hot_context(self):
+        context = build_home_context(
+            sample_states(curtain_state="open", position=100, illuminance="900")
+        )
+        result = _normalize_parsed_command(
+            "The living room feels stifling. Make it pleasant.",
+            {"intent": None, "commands": [], "response": None},
+            context,
+            self.physical_entities(),
+        )
+
+        self.assertEqual(result["intent"], "reduce_heat")
+        self.assertEqual(len(result["commands"]), 2)
 
     def test_cooling_transcription_variants_use_hot_context(self):
         context = build_home_context(sample_states())

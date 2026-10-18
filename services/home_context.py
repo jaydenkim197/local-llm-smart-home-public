@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable
 
+from app.config import HOME_BRIGHT_LUX_THRESHOLD, HOME_DARK_LUX_THRESHOLD
 from services.solar import build_solar_context
 
 
@@ -13,8 +14,8 @@ STATE_ENTITY_MAP = {
     "curtain": "cover.aqara_curtain_controller",
 }
 
-DARK_LUX_THRESHOLD = 100.0
-BRIGHT_LUX_THRESHOLD = 800.0
+DARK_LUX_THRESHOLD = HOME_DARK_LUX_THRESHOLD
+BRIGHT_LUX_THRESHOLD = HOME_BRIGHT_LUX_THRESHOLD
 HOT_C_THRESHOLD = 28.0
 HUMID_PERCENT_THRESHOLD = 65.0
 

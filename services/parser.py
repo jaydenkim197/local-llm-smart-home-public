@@ -64,6 +64,12 @@ Rules:
 """
 
 
+PHYSICAL_ACTIONS_BY_ENTITY = {
+    "cover.living_room_curtain": {"open_cover", "close_cover", "stop_cover"},
+    "climate.air_conditioner": {"turn_on", "turn_off"},
+}
+
+
 async def parse_command(
     text: str,
     supported_entities: Optional[set[str]] = None,
@@ -156,15 +162,21 @@ def _restrict_to_supported_entities(
     if not commands:
         return parsed
 
-    filtered_commands = [
-        command for command in commands if command.get("entity_id") in supported_entities
-    ]
+    filtered_commands = []
+    for command in commands:
+        entity_id = command.get("entity_id")
+        if entity_id not in supported_entities:
+            continue
+        allowed_actions = PHYSICAL_ACTIONS_BY_ENTITY.get(entity_id)
+        if allowed_actions is not None and command.get("action") not in allowed_actions:
+            continue
+        filtered_commands.append(command)
     if filtered_commands:
         return {**parsed, "commands": filtered_commands}
     return {
         "intent": "unsupported",
         "commands": [],
-        "response": "That request does not target a configured physical device.",
+        "response": "That request is not supported by a configured physical device.",
     }
 
 
@@ -178,6 +190,12 @@ def _normalize_parsed_command(
     solar_information = _solar_information_response(normalized, home_context)
     if solar_information:
         return solar_information
+
+    unsupported_environment_command = _unsupported_environment_command(
+        normalized, supported_entities
+    )
+    if unsupported_environment_command:
+        return unsupported_environment_command
 
     explicit_ac_command = _explicit_ac_command(normalized, supported_entities)
     if explicit_ac_command:
@@ -263,14 +281,18 @@ def _build_llm_user_content(
 def _contextual_curtain_command(
     text: str, home_context: Optional[Dict[str, Any]]
 ) -> Dict[str, Any] | None:
-    if not home_context or home_context.get("source") == "unavailable":
+    request_kind = _contextual_light_request_kind(text)
+    if request_kind is None:
         return None
+
+    if not home_context or home_context.get("source") == "unavailable":
+        return _context_unavailable_response()
 
     derived = home_context.get("derived", {})
     curtain = home_context.get("living_room", {}).get("curtain", {})
     curtain_state = curtain.get("state")
 
-    if any(phrase in text for phrase in ["dark", "not enough light", "need more light"]):
+    if request_kind == "increase":
         if derived.get("is_dark") is not True:
             return {
                 "intent": "context_no_action",
@@ -289,7 +311,7 @@ def _contextual_curtain_command(
             "response": "I will open the curtain to let in more natural light.",
         }
 
-    if any(phrase in text for phrase in ["too bright", "very bright", "glare"]):
+    if request_kind == "reduce":
         if curtain_state == "closed":
             return {
                 "intent": "context_no_action",
@@ -316,15 +338,13 @@ def _contextual_cooling_command(
     home_context: Optional[Dict[str, Any]],
     supported_entities: Optional[set[str]],
 ) -> Dict[str, Any] | None:
-    if (
-        not home_context
-        or home_context.get("source") == "unavailable"
-        or not supported_entities
-        or "climate.air_conditioner" not in supported_entities
-    ):
+    if not supported_entities or "climate.air_conditioner" not in supported_entities:
         return None
     if not _is_cooling_request(text):
         return None
+
+    if not home_context or home_context.get("source") == "unavailable":
+        return _context_unavailable_response()
 
     if home_context.get("derived", {}).get("is_hot") is not True:
         return {
@@ -347,13 +367,15 @@ def _contextual_cooling_command(
 
 
 def _is_cooling_request(text: str) -> bool:
-    if any(phrase in text for phrase in ["warm up", "warmer", "heating", "too cold"]):
+    if _is_heating_request(text):
         return False
 
     room_reference = bool(
         re.search(r"\b(living room|room|in here|here|inside|home)\b", text)
     )
-    heat_description = bool(re.search(r"\b(hot|warm|overheated)\b", text))
+    heat_description = bool(
+        re.search(r"\b(hot|warm|overheated|stifling|sweltering)\b", text)
+    )
     cooling_request = bool(
         re.search(r"\b(cool down|cooler|cool the (?:living )?room|start cooling)\b", text)
     )
@@ -363,8 +385,71 @@ def _is_cooling_request(text: str) -> bool:
             text,
         )
     )
+    comfort_request = comfort_request or bool(
+        room_reference
+        and re.search(r"\b(make|bring|get|keep)\b", text)
+        and re.search(r"\b(comfortable|comfort|pleasant)\b", text)
+    )
     discomfort = "uncomfortable" in text and room_reference
     return (heat_description and room_reference) or cooling_request or comfort_request or discomfort
+
+
+def _is_heating_request(text: str) -> bool:
+    return any(
+        phrase in text
+        for phrase in ["warm up", "warmer", "heating", "turn on the heat", "too cold"]
+    )
+
+
+def _unsupported_environment_command(
+    text: str, supported_entities: Optional[set[str]]
+) -> Dict[str, Any] | None:
+    if not supported_entities or "climate.air_conditioner" not in supported_entities:
+        return None
+
+    ac_reference = bool(
+        "air conditioner" in text
+        or re.search(r"\bac\b", text)
+        or "thermostat" in text
+    )
+    unsupported_ac_capability = ac_reference and bool(
+        re.search(r"\b(degree|degrees|temperature|thermostat|fan speed|hvac mode)\b", text)
+    )
+    if not _is_heating_request(text) and not unsupported_ac_capability:
+        return None
+    return {
+        "intent": "unsupported",
+        "commands": [],
+        "response": "The configured air conditioner supports only Cool 24 C and Off presets.",
+    }
+
+
+def _contextual_light_request_kind(text: str) -> str | None:
+    increase_phrases = [
+        "dark",
+        "not enough light",
+        "not enough natural light",
+        "need more light",
+        "more daylight",
+        "more natural light",
+        "feels dim",
+        "feel dim",
+        "room is dim",
+    ]
+    reduce_phrases = ["too bright", "very bright", "excessively bright", "glare"]
+    if any(phrase in text for phrase in increase_phrases):
+        return "increase"
+    if any(phrase in text for phrase in reduce_phrases):
+        return "reduce"
+    return None
+
+
+def _context_unavailable_response() -> Dict[str, Any]:
+    return {
+        "intent": "context_unavailable",
+        "commands": [],
+        "response": "Current sensor context is unavailable, so no contextual action was sent.",
+    }
 
 
 def _apply_context_policy(

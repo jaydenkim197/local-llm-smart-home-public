@@ -28,7 +28,7 @@ from services.outdoor_context import OutdoorContextProvider
 from services.parser import parse_command
 from services.stt import transcribe_audio
 
-app = FastAPI(title="Local LLM Smart Home Simulator")
+app = FastAPI(title="Context-Aware Local LLM-Based IoT Control System")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

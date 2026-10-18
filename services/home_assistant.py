@@ -100,16 +100,17 @@ class HomeAssistantAdapter:
                     if metadata.pop("momentary_trigger", False):
                         prelude_entity_id = metadata.pop("prelude_entity_id", None)
                         if prelude_entity_id:
-                            await self._ensure_scene_entity_available(
+                            await self._wait_for_scene_ready(
                                 client, prelude_entity_id
                             )
-                            await self._trigger_scene(client, prelude_entity_id)
+                            await self._activate_scene(client, prelude_entity_id)
                             await asyncio.sleep(self._ac_scene_reset_delay)
-                        await self._trigger_scene(client, actual_id)
+                        await self._wait_for_scene_ready(client, actual_id)
+                        await self._activate_scene(client, actual_id)
                         service_label = (
                             "AC Off scene -> AC Cool 24 scene"
                             if prelude_entity_id
-                            else "switch.turn_off -> switch.turn_on"
+                            else "AC Off scene"
                         )
                     else:
                         response = await client.post(
@@ -136,27 +137,32 @@ class HomeAssistantAdapter:
 
         return {"applied": applied, "errors": errors, "success": not errors}
 
-    async def _trigger_scene(
+    async def _activate_scene(
         self, client: httpx.AsyncClient, entity_id: str
     ) -> None:
-        reset = await client.post(
-            "/api/services/switch/turn_off", json={"entity_id": entity_id}
-        )
-        reset.raise_for_status()
-        await asyncio.sleep(self._ac_scene_reset_delay)
         trigger = await client.post(
             "/api/services/switch/turn_on", json={"entity_id": entity_id}
         )
         trigger.raise_for_status()
 
-    async def _ensure_scene_entity_available(
+    async def _wait_for_scene_ready(
         self, client: httpx.AsyncClient, entity_id: str
     ) -> None:
-        response = await client.get(f"/api/states/{entity_id}")
-        response.raise_for_status()
-        state = response.json().get("state")
-        if not entity_id.startswith("switch.") or state in {"unknown", "unavailable"}:
-            raise ValueError(f"Scene trigger is unavailable: {entity_id}")
+        if not entity_id.startswith("switch."):
+            raise ValueError(f"Scene trigger is not a switch: {entity_id}")
+        for attempt in range(11):
+            response = await client.get(f"/api/states/{entity_id}")
+            response.raise_for_status()
+            state = response.json().get("state")
+            if state == "off":
+                return
+            if state in {"unknown", "unavailable"}:
+                raise ValueError(f"Scene trigger is unavailable: {entity_id}")
+            if state != "on":
+                raise ValueError(f"Scene trigger is not ready: {entity_id} ({state})")
+            if attempt < 10:
+                await asyncio.sleep(0.5)
+        raise ValueError(f"Scene trigger did not return to off: {entity_id}")
 
     async def _physical_target(
         self, client: httpx.AsyncClient, logical_id: Any, action: Any
@@ -175,10 +181,6 @@ class HomeAssistantAdapter:
         if not actual_id:
             return self._ac_cool_scene_entity, None, {}
 
-        try:
-            await self._ensure_scene_entity_available(client, actual_id)
-        except ValueError:
-            return actual_id, None, {}
         preset = "Cool 24 C" if action == "turn_on" else "Off"
         return actual_id, ("switch", "turn_on"), {
             "momentary_trigger": True,
